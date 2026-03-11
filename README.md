@@ -29,7 +29,38 @@ mkosi/bootc image building skills for Debian-based immutable OS images.
 | `image-building` | Building, testing, or publishing bootc/mkosi images |
 | `immutable-fs` | Filesystem layout or package relocation questions |
 
-## Install from local checkout
+## Project installation (recommended)
+
+Add frostyard plugins to your project so all team members get them automatically. Run this from your project's root directory:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/frostyard/frostyard-ai/main/install.sh)
+```
+
+This adds frostyard-ai as a [team marketplace](https://code.claude.com/docs/en/discover-plugins#configure-team-marketplaces) in your project's `.claude/settings.json`. When teammates open the project in Claude Code and trust the folder, they'll be prompted to install the plugins.
+
+Commit `.claude/settings.json` to share it with your team.
+
+### Manual setup
+
+If you prefer to configure it by hand, add this to your project's `.claude/settings.json`:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "frostyard-ai": {
+      "source": "github",
+      "repo": "frostyard/frostyard-ai"
+    }
+  },
+  "enabledPlugins": {
+    "frostyard-dev@frostyard-ai": true,
+    "frostyard-os@frostyard-ai": true
+  }
+}
+```
+
+## User-wide installation
 
 Clone the repo and install each plugin locally:
 
