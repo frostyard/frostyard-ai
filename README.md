@@ -59,6 +59,23 @@ claude plugin remove frostyard-dev
 claude plugin remove frostyard-os
 ```
 
+## Attribution
+
+### Skill authoring
+
+Skills were authored and tested using the [superpowers](https://github.com/obra/superpowers) plugin by Jesse Vincent.
+
+### frostyard-dev sources
+
+The `frostyard-dev` plugin consolidates and replaces three earlier plugins:
+
+- [`go-dev`](https://github.com/gopherguides/gopher-ai) and [`go-web`](https://github.com/gopherguides/gopher-ai) from [Gopher Guides](https://github.com/gopherguides) — `go-best-practices` is adapted from their `go-best-practices` skill
+- [`modern-go-guidelines`](https://github.com/AWarno/goland-claude-marketplace) from [AWarno](https://github.com/AWarno) — `use-modern-go` is adapted from their `use-modern-go` skill
+
+The `uber-go-style` skill is distilled from the [Uber Go Style Guide](https://github.com/uber-go/guide/blob/master/style.md). The `go-best-practices` skill also references [Effective Go](https://go.dev/doc/effective_go).
+
+The monorepo marketplace structure follows the pattern established by [gopher-ai](https://github.com/gopherguides/gopher-ai).
+
 ## License
 
 MIT
