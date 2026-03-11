@@ -16,7 +16,7 @@ A shell script at the repo root that users run from their target project's root 
 
 **Behavior:**
 
-1. Verify `.git` exists in the current directory (exit with error if not a git repo root).
+1. Verify the current directory is a git repository root using `git rev-parse --show-toplevel` (handles worktrees and submodules correctly; exit 1 if not a repo root).
 2. Create `.claude/` directory if it doesn't exist.
 3. Check for `jq` availability and whether `.claude/settings.json` already exists.
 4. Write or merge the following config:
@@ -41,11 +41,15 @@ A shell script at the repo root that users run from their target project's root 
 | `jq` available | settings.json exists | Action |
 |---|---|---|
 | yes | no | Write fresh config |
-| yes | yes | Merge into existing config using `jq` |
+| yes | yes | Merge into existing config using `jq` (additive deep merge) |
 | no | no | Write fresh config directly |
-| no | yes | Warn and exit with manual instructions |
+| no | yes | Print the exact JSON snippet to merge manually, then exit 1 |
 
-**On success:** Print confirmation and next steps (restart Claude Code, teammates trust folder to get prompted).
+**The script is idempotent.** Running it multiple times produces the same result. When merging with `jq`, existing keys in `extraKnownMarketplaces` and `enabledPlugins` are preserved; frostyard-ai entries are overwritten if already present.
+
+**Exit codes:** 0 on success, 1 on failure.
+
+**On success:** Print confirmation and remind the user to commit `.claude/settings.json` to their repo (this is project-scoped config intended to be shared with teammates).
 
 **On failure:** Print actionable error message.
 
