@@ -107,6 +107,14 @@ The script at `shared/sysext/postoutput/sysext-postoutput.sh` runs after image c
 
 Do not modify this script per-sysext. If custom post-processing is needed, add a separate script.
 
+## Version Management
+
+Package versions come from the APT repositories configured in mkosi. To update a sysext's version:
+
+1. The version is determined by the `KEYPACKAGE` version in the repository
+2. For pinned/external packages, update the version in `shared/download/checksums.json`
+3. Rebuild: `sudo mkosi -f -i <name>` — the postoutput script extracts and applies the new version
+
 ## Factory Pattern for /etc Configs
 
 When a sysext needs files in `/etc` at runtime:
@@ -125,6 +133,29 @@ When a sysext needs files in `/etc` at runtime:
    ```
 
 This works because `systemd-tmpfiles` runs early in boot and copies factory defaults to `/etc` if they don't already exist.
+
+## Service Enablement in Sysexts
+
+Sysexts cannot run `systemctl enable` at build time. To enable a systemd service shipped by a sysext:
+
+**System services:** Use a systemd preset file:
+```ini
+# /usr/lib/systemd/system-preset/50-<name>.preset
+enable <service-name>.service
+```
+
+**User services:** Use the factory pattern to create the enablement symlink:
+```bash
+# In postinstall script
+mkdir -p /usr/share/factory/etc/systemd/user/<target>.wants
+ln -sf /usr/lib/systemd/user/<service> /usr/share/factory/etc/systemd/user/<target>.wants/<service>
+```
+
+Then add a tmpfiles rule:
+```ini
+# /usr/lib/tmpfiles.d/<name>-user-service.conf
+C /etc/systemd/user/<target>.wants/<service> - - - - /usr/share/factory/etc/systemd/user/<target>.wants/<service>
+```
 
 ## Step-by-Step: Adding a New Sysext
 
@@ -161,3 +192,18 @@ This works because `systemd-tmpfiles` runs early in boot and copies factory defa
    ```bash
    sudo mkosi -f -i <name>
    ```
+
+## Testing a Sysext Locally
+
+After building with `sudo mkosi -f -i <name>`:
+
+1. Copy the `.raw` output to `/var/lib/extensions.d/`
+2. Refresh sysext overlays: `sudo systemd-sysext refresh`
+3. Verify the overlay: `systemd-sysext status`
+4. Check files are present: `ls /usr/bin/<expected-binary>`
+5. To remove: delete the `.raw` file and run `sudo systemd-sysext refresh`
+
+## Limitations
+
+- **Inter-sysext dependencies:** Sysexts are independent overlays. One sysext cannot depend on another. If two sysexts share a library, both must include it.
+- **Removing a sysext:** Delete its `mkosi.images/<name>/` directory, remove from root `Dependencies=`, and delete its `.transfer` and `.feature` files from `mkosi.images/base/mkosi.extra/usr/lib/sysupdate.d/`.

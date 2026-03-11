@@ -73,6 +73,21 @@ go func() {
 
 Expose objects with `Close()`/`Shutdown()` methods instead. Goroutine lifetime must be controllable by the caller.
 
+### Recover Panics in Goroutines
+
+An unrecovered panic in a goroutine crashes the entire process. Always defer a recovery handler in goroutines that could panic.
+
+```go
+go func() {
+    defer func() {
+        if r := recover(); r != nil {
+            log.Error("goroutine panicked", zap.Any("panic", r))
+        }
+    }()
+    // work that might panic
+}()
+```
+
 ### Zero-Value Mutexes
 
 Use `var mu sync.Mutex`, not `new(sync.Mutex)`. In structs, use named fields — never embed mutexes (leaks to public API).
@@ -82,6 +97,18 @@ type SMap struct {
     mu   sync.Mutex  // named field, not embedded
     data map[string]string
 }
+```
+
+### Context as First Parameter
+
+Always pass `context.Context` as the first parameter, named `ctx`. Never store it in a struct.
+
+```go
+// Good
+func (s *Store) Get(ctx context.Context, id string) (*Item, error)
+
+// Bad — context in struct
+type Store struct { ctx context.Context }
 ```
 
 ## Defensive Copying

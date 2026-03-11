@@ -15,6 +15,12 @@ Guide to building, testing, and publishing frostyard OS images with mkosi and ju
 - just (command runner)
 - Root/sudo access (mkosi builds require privileges)
 
+Install on Debian/Ubuntu:
+```bash
+pipx install mkosi          # mkosi v24+ (not available in distro repos)
+sudo apt install just buildah systemd-container
+```
+
 ## Build Commands
 
 ```bash
@@ -84,6 +90,14 @@ Desktop images are packaged as OCI containers via `shared/outformat/image/builda
 - Uses buildah to create OCI images from the directory output
 - Pushes to `ghcr.io` in CI
 
+To build an OCI image locally:
+```bash
+just snow                   # Builds image + runs buildah packaging
+buildah images              # Verify the OCI image was created
+```
+
+The `just` targets for desktop profiles automatically invoke the buildah postoutput script.
+
 ## CI/CD
 
 | Workflow | Purpose |
@@ -99,3 +113,26 @@ sudo mkosi -f -i <sysext-name>
 ```
 
 This builds only the specified image (plus its dependencies like `base`).
+
+## Testing in a VM
+
+Boot a built desktop image with QEMU:
+
+```bash
+sudo mkosi qemu                    # Boot the default profile image
+sudo mkosi -p snow qemu            # Boot a specific profile
+```
+
+mkosi handles VM configuration (UEFI, TPM, disk) automatically. Use `Ctrl-A X` to exit QEMU.
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| Permission denied | Missing sudo | All mkosi builds require `sudo` |
+| Package not found | Missing repository | Check `Repositories=` in root mkosi.conf |
+| Script fails silently | Missing `set -euo pipefail` | Add to top of every script |
+| Sysext not in output | Missing from `Dependencies=` | Add image name to root mkosi.conf |
+| Stale build artifacts | Incremental cache | Run `just clean` or `mkosi clean` first |
+
+For verbose output: `sudo mkosi -f -i <name> --debug`

@@ -116,5 +116,36 @@ help:
 - Replace `<app-name>` with actual binary/module name
 - Adjust `./cmd/<app-name>` to match entry point location
 - Add `-X` flags to LDFLAGS for additional build-time variables
-- For multi-binary projects, add separate build targets per binary
+- For multi-binary projects, add per-binary targets: `build-server`, `build-client`, then `build: build-server build-client`
+- For code generation (protobuf, mockgen), add a `generate` target:
+  ```makefile
+  .PHONY: generate
+  ## generate: Run code generation
+  generate:
+  	$(GO) generate ./...
+  ```
+- For cross-compilation, add per-platform targets:
+  ```makefile
+  ## build-linux: Cross-compile for Linux amd64
+  build-linux:
+  	GOOS=linux GOARCH=amd64 $(GO) build $(LDFLAGS) -o build/<app>-linux-amd64 ./cmd/<app>
+  ```
+- `svu` is required for `make bump` — install from https://github.com/caarlos0/svu or replace with manual `git tag -a vX.Y.Z -m "vX.Y.Z"`
 - The `help` target parses `## target: description` comments from the Makefile itself
+
+## Go-Side Version Variables
+
+Declare these in your `main` package to receive values from ldflags:
+
+```go
+var (
+    version   = "dev"
+    buildTime = "unknown"
+)
+
+func main() {
+    fmt.Printf("%s (built %s)\n", version, buildTime)
+}
+```
+
+The Makefile's `-X main.version=$(VERSION)` sets these at link time.

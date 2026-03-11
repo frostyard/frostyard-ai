@@ -14,7 +14,7 @@ Guide to the immutable filesystem layout used by frostyard bootc images.
 | Path | Access | Purpose | Notes |
 |------|--------|---------|-------|
 | `/usr` | Read-only | Binaries, libraries, system configs | All package contents must live here |
-| `/etc` | Overlay | System configuration | Overlay on `/usr/etc`. Base configs in image, user changes persist across boots |
+| `/etc` | Overlay | System configuration | Overlay on `/usr/etc`. Base configs in image, user changes persist across boots. On OS update, new base configs merge — user-modified files are preserved (user layer wins) |
 | `/var` | Read-write | State, logs, container storage | Persistent across boots and updates |
 | `/opt` | Bind-mount | Third-party software | Bind-mount to `/var/opt`. **Writable at runtime but shadowed by sysext overlays** |
 | `/home` | Read-write | User data | Persistent |
@@ -38,6 +38,8 @@ ln -sf /usr/lib/<package>/bin/<binary> /usr/bin/<binary>
 
 This applies to both desktop images and sysexts. Common packages needing relocation: 1Password, some proprietary tools.
 
+All binaries in the image must reside under `/usr/bin` or `/usr/sbin`. If installing from a tarball or custom build, place the binary directly in `/usr/bin/`.
+
 ## User Service Enablement in Chroot
 
 `systemctl --user enable` does not work inside a mkosi chroot — there's no user session or D-Bus. System services work fine via `systemctl enable`, but user services require manual symlink creation:
@@ -58,6 +60,10 @@ The target (e.g., `gnome-session.target`) comes from the service's `WantedBy=` i
 2. Compare against its `.dsh-also` file
 3. If missing, add a manual symlink in the build script
 
+### Combined System + User Services
+
+If a package ships both types: system services (`/usr/lib/systemd/system/`) are enabled normally via `systemctl enable` in the chroot. User services require the manual symlink approach above. Handle them independently — system service enablement does not affect user services.
+
 ## Shell Script Conventions
 
 - `set -euo pipefail` at the top of every script
@@ -74,5 +80,22 @@ Sysexts have additional constraints beyond the base image:
 - Cannot modify `/etc` or `/var` at runtime
 - For `/etc` configs, use the factory pattern:
   1. Capture to `/usr/share/factory/etc/` during build
-  2. Inject at boot via `systemd-tmpfiles` `C` (copy) directive
-- See `sysext-authoring` skill for details
+  2. Inject at boot via `systemd-tmpfiles` `C` (copy) directive:
+     ```ini
+     # /usr/lib/tmpfiles.d/myapp.conf
+     C /etc/myapp - - - - /usr/share/factory/etc/myapp
+     ```
+  See `sysext-authoring` skill for full details
+
+## OS Update Behavior
+
+During a bootc update:
+
+| Path | Behavior |
+|------|----------|
+| `/usr` | Replaced entirely with the new image |
+| `/etc` | User modifications preserved — new base defaults merge underneath |
+| `/var` | Untouched — fully persistent |
+| `/home` | Untouched — fully persistent |
+
+Sysexts are updated independently via `systemd-sysupdate`.

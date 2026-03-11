@@ -9,6 +9,8 @@ description: >
 
 Brief guide to mkosi's configuration system as used in frostyard image builds.
 
+> **Prerequisites:** mkosi v24+, just, root/sudo access. See `image-building` skill for setup details.
+
 ## Configuration Hierarchy
 
 mkosi composes configuration from multiple levels:
@@ -41,6 +43,8 @@ The root config sets global defaults inherited by all images:
 - `WithNetwork=true` (needed for package downloads)
 - `Dependencies=` lists all images that must build (base + all sysexts)
 - `BaseTrees=%O/base` — all images layer on top of the base image output
+
+Per-image repository configuration is possible via `Repositories=` or `PackageManagerTrees=` in the image's own `mkosi.conf`. Use `PackageManagerTrees=` to add custom APT sources lists.
 
 ## Image Definitions (mkosi.images/)
 
@@ -79,6 +83,8 @@ Include=../../shared/packages/desktop.conf
 
 Paths are relative to the config file using the directive. Fragments are merged in order — later values override earlier ones for single-value keys; list keys accumulate.
 
+Image configs in `mkosi.images/` inherit all settings from the root `mkosi.conf`. Per-image settings override single-value keys; list keys (like `Packages=`) accumulate.
+
 ## Key Variables
 
 - `%D` — source directory (repo root)
@@ -92,3 +98,24 @@ Paths are relative to the config file using the directive. Fragments are merged 
 3. Set `Environment=KEYPACKAGE=<primary-package>`
 4. Add the image name to root `mkosi.conf` `Dependencies=`
 5. Create `.transfer` and `.feature` files (see `sysext-authoring` skill)
+
+## Adding a New Profile
+
+1. Create `mkosi.profiles/<name>/mkosi.conf`
+2. Include shared fragments:
+   ```ini
+   [Config]
+   Include=../../shared/packages/<package-set>.conf
+            ../../shared/kernel/<variant>.conf
+            ../../shared/outformat/image/image.conf
+   ```
+3. Add profile-specific `Packages=`, scripts, and environment variables
+4. Create build/postinstall/finalize scripts as needed
+5. Add a `just` target in the justfile for the new profile
+
+## Debugging Builds
+
+- Verbose output: `sudo mkosi -f -i <name> --debug`
+- Interactive shell in build environment: `sudo mkosi shell`
+- Check build logs for package resolution and script errors
+- Common issue: missing `Dependencies=` entry in root config

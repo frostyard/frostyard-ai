@@ -51,6 +51,21 @@ DO NOT search for go.mod files or try to detect the version yourself. Use ONLY t
 - `any`: Use `any` instead of `interface{}`
 - `bytes.Cut`: `before, after, found := bytes.Cut(b, sep)` instead of Index+slice
 - `strings.Cut`: `before, after, found := strings.Cut(s, sep)`
+- **Generics (type parameters)**: Use when writing functions/types that work identically across multiple types. Prefer interfaces for behavioral abstraction; use generics for type-safe data structures and algorithms.
+
+```go
+// Good — generic utility
+func Map[T, U any](s []T, f func(T) U) []U {
+    result := make([]U, len(s))
+    for i, v := range s {
+        result[i] = f(v)
+    }
+    return result
+}
+
+// Avoid — generics where interface suffices
+func Bad[T io.Reader](r T) { ... } // Just use io.Reader
+```
 
 ### Go 1.19+
 
@@ -106,6 +121,18 @@ ptr.Store(cfg)
 - `context.AfterFunc`: `stop := context.AfterFunc(ctx, cleanup)` runs cleanup on cancellation
 - `context.WithTimeoutCause`: `ctx, cancel := context.WithTimeoutCause(parent, d, err)`
 - `context.WithDeadlineCause`: Similar with deadline instead of duration
+
+**log/slog package:**
+- `slog.Info("msg", "key", val)`: Structured logging — replaces `log.Printf`
+- `slog.With("key", val)`: Create logger with preset fields
+- `slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))`: Set default handler
+
+```go
+// Instead of:
+log.Printf("processing item id=%s status=%s", id, status)
+// Use:
+slog.Info("processing item", "id", id, "status", status)
+```
 
 ### Go 1.22+
 
@@ -275,6 +302,12 @@ cfg := Config{
     Timeout: new(30),   // *int
     Debug:   new(true), // *bool
 }
+```
+
+For projects below Go 1.26, use a generic helper:
+```go
+func ptr[T any](v T) *T { return &v }
+cfg := Config{Timeout: ptr(30), Debug: ptr(true)}
 ```
 
 - `errors.AsType[T](err)` not `errors.As(err, &target)`.

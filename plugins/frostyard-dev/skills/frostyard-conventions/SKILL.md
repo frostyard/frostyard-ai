@@ -27,6 +27,12 @@ Use conventional commit format:
 - Use imperative mood: "add feature" not "added feature"
 - Optional scope: `feat(cli):` or `fix(config):`
 
+### Breaking Changes
+
+- Append `!` after the type: `feat!: remove deprecated API` or `refactor!: rename config keys`
+- While pre-1.0, breaking changes bump MINOR (e.g., v0.6.0 → v0.7.0)
+- After 1.0, breaking changes bump MAJOR (e.g., v1.2.0 → v2.0.0)
+
 ## Release Process
 
 All releases use semantic versioning via [svu](https://github.com/caarlos0/svu) and `make bump`:
@@ -43,6 +49,8 @@ All releases use semantic versioning via [svu](https://github.com/caarlos0/svu) 
    - Push tag to origin
 
 Tag format: `vMAJOR.MINOR.PATCH` (e.g., `v0.6.0`, `v1.0.2`)
+
+To release a specific version instead of auto-calculated: `git tag -a v0.7.0 -m "v0.7.0" && git push origin v0.7.0`
 
 ## Repository Structure
 
@@ -81,9 +89,17 @@ Standard Go project layout for frostyard repos:
 - Makefile `lint` target includes graceful fallback if not installed
 - Run `make check` (fmt + lint + test) before commits and PRs
 
+## CI
+
+- GitHub Actions for all CI/CD
+- Workflows live in `.github/workflows/`
+- PRs run `make check` (fmt + lint + test)
+- See `image-building` skill for OS image CI pipelines
+
 ## PR Workflow
 
 - Feature branches off `main`
+- Branch naming: `<type>/<short-description>` (e.g., `feat/cli-flags`, `fix/config-parse`)
 - PRs require passing CI (`make check`)
 - Keep PRs focused — one feature or fix per PR
 - At least one team member should review before merge

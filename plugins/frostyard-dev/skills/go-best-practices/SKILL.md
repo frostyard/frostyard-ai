@@ -56,6 +56,79 @@ if err := g.Wait(); err != nil {
 }
 ```
 
+To collect ALL errors (not just the first), use a custom collector or `errors.Join`:
+
+```go
+var mu sync.Mutex
+var errs []error
+for _, item := range items {
+    g.Go(func() error {
+        if err := process(ctx, item); err != nil {
+            mu.Lock()
+            errs = append(errs, err)
+            mu.Unlock()
+        }
+        return nil
+    })
+}
+g.Wait()
+return errors.Join(errs...)
+```
+
+## Graceful Shutdown
+
+- Trap `os.Interrupt` and `syscall.SIGTERM` with `signal.NotifyContext`
+- Use `context.Context` cancellation to propagate shutdown
+- Call `server.Shutdown(ctx)` for HTTP servers — not `Close()`
+
+```go
+ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+defer stop()
+
+srv := &http.Server{Addr: ":8080", Handler: mux}
+go func() { srv.ListenAndServe() }()
+
+<-ctx.Done()
+shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+defer cancel()
+srv.Shutdown(shutdownCtx)
+```
+
+## Logging
+
+- Use `log/slog` (Go 1.21+) for structured logging
+- Pass `*slog.Logger` via dependency injection, not package globals
+- Use `slog.With` to add context fields
+- Log at appropriate levels: `Debug` for development, `Info` for operations, `Warn` for recoverable issues, `Error` for failures
+
+```go
+func NewServer(logger *slog.Logger) *Server {
+    return &Server{log: logger.With("component", "server")}
+}
+
+func (s *Server) Handle(r *http.Request) {
+    s.log.Info("request received", "method", r.Method, "path", r.URL.Path)
+}
+```
+
+## Configuration
+
+- Use struct-based configuration with explicit defaults
+- Load from environment variables, config files, or flags — in that precedence order
+- Validate configuration at startup, fail fast on invalid values
+- Keep config types in a dedicated package or close to `main`
+
+```go
+type Config struct {
+    Port    int           `env:"PORT"`
+    Timeout time.Duration `env:"TIMEOUT"`
+}
+
+func DefaultConfig() Config {
+    return Config{Port: 8080, Timeout: 30 * time.Second}
+}
+```
+
 ## Testing
 
 - **Use table-driven tests** for multiple scenarios
