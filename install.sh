@@ -27,7 +27,7 @@ repo_root="$(git rev-parse --show-toplevel 2>/dev/null)" || {
   echo "Error: not inside a git repository." >&2
   exit 1
 }
-if [ "$repo_root" != "$(pwd)" ]; then
+if [ "$(realpath "$repo_root")" != "$(realpath "$(pwd)")" ]; then
   echo "Error: run this from the repository root ($repo_root)." >&2
   exit 1
 fi
@@ -44,7 +44,11 @@ fi
 if [ -f "$SETTINGS_FILE" ]; then
   # Settings file exists
   if [ "$has_jq" = true ]; then
-    # Merge: additive deep merge, preserving existing keys
+    if ! jq empty "$SETTINGS_FILE" 2>/dev/null; then
+      echo "Error: $SETTINGS_FILE exists but is not valid JSON. Fix it and re-run." >&2
+      exit 1
+    fi
+    # Merge: recursive object merge; frostyard keys overwrite conflicts, other keys preserved
     merged=$(jq -s '.[0] * .[1]' "$SETTINGS_FILE" - <<< "$FROSTYARD_CONFIG")
     printf '%s\n' "$merged" > "$SETTINGS_FILE"
   else
