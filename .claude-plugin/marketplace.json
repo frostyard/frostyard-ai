@@ -1,0 +1,27 @@
+{
+  "name": "frostyard-ai",
+  "owner": {
+    "name": "Frostyard",
+    "email": "info@frostyard.org"
+  },
+  "metadata": {
+    "description": "Go development and OS image building skills for the Frostyard organization",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "frostyard-dev",
+      "source": "./plugins/frostyard-dev",
+      "description": "Opinionated Go development tools with Uber style, modern Go, and org conventions",
+      "version": "0.1.0",
+      "keywords": ["go", "uber", "style", "best-practices", "modern-go", "makefile", "conventions"]
+    },
+    {
+      "name": "frostyard-os",
+      "source": "./plugins/frostyard-os",
+      "description": "mkosi/bootc image building skills for Debian-based immutable OS images",
+      "version": "0.1.0",
+      "keywords": ["mkosi", "bootc", "sysext", "immutable", "debian", "oci"]
+    }
+  ]
+}

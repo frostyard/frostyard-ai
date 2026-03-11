@@ -1,0 +1,12 @@
+{
+  "name": "frostyard-os",
+  "description": "mkosi/bootc image building skills for Debian-based immutable OS images",
+  "version": "0.1.0",
+  "author": {
+    "name": "Frostyard",
+    "email": "info@frostyard.org"
+  },
+  "repository": "https://github.com/frostyard/frostyard-ai",
+  "license": "MIT",
+  "keywords": ["mkosi", "bootc", "sysext", "immutable", "debian", "oci"]
+}
