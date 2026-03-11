@@ -49,8 +49,10 @@ If you prefer to configure it by hand, add this to your project's `.claude/setti
 {
   "extraKnownMarketplaces": {
     "frostyard-ai": {
-      "source": "github",
-      "repo": "frostyard/frostyard-ai"
+      "source": {
+        "source": "github",
+        "repo": "frostyard/frostyard-ai"
+      }
     }
   },
   "enabledPlugins": {

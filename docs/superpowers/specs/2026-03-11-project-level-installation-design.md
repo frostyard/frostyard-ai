@@ -25,8 +25,10 @@ A shell script at the repo root that users run from their target project's root 
 {
   "extraKnownMarketplaces": {
     "frostyard-ai": {
-      "source": "github",
-      "repo": "frostyard/frostyard-ai"
+      "source": {
+        "source": "github",
+        "repo": "frostyard/frostyard-ai"
+      }
     }
   },
   "enabledPlugins": {

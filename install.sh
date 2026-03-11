@@ -12,8 +12,10 @@ SETTINGS_FILE="$SETTINGS_DIR/settings.json"
 FROSTYARD_CONFIG='{
   "extraKnownMarketplaces": {
     "frostyard-ai": {
-      "source": "github",
-      "repo": "frostyard/frostyard-ai"
+      "source": {
+        "source": "github",
+        "repo": "frostyard/frostyard-ai"
+      }
     }
   },
   "enabledPlugins": {
